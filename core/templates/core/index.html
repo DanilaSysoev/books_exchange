@@ -1,0 +1,26 @@
+{% extends "config/base.html" %}
+
+{% block title %}Book exchange site{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="my-4 mx-md-4">Добро пожаловать на сайт обмена книгами!</h1>
+    {% if error %}
+        <div class="alert alert-danger" role="alert">
+            {{ error }}
+        </div>
+    {% else %}
+        <div class="row mt-4 mx-md-4">
+        {% for book in books %}
+            <div class="col-md-4">
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ book.title }}</h5>
+                        <p class="card-text">Автор: {{ book.author }}</p>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
+</div>
+{% endblock %}
