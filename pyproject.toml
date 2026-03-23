@@ -1,7 +1,7 @@
 [tool.ruff]
 target-version = "py312"
 line-length = 79
-exclude = ["migrations/*", ".venv/*"]
+exclude = ["**/migrations", ".venv/*"]
 lint.extend-select = ["I", "UP", "B", "C4", "SIM", "RUF"]
 lint.ignore = ["E203", "RUF002", "RUF003", "RUF001"]
 

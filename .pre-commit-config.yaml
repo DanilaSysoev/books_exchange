@@ -32,4 +32,5 @@ repos:
           django==6.0.2,
           django-environ==0.13.0,
           'django-stubs[compatible-mypy]==5.2.9',
+          'psycopg[binary]==3.3.3',
         ]
