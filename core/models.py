@@ -16,9 +16,11 @@ class Author(models.Model):
 class Book(models.Model):
     name = models.CharField(max_length=256, null=False, blank=False)
     publish_year = models.PositiveIntegerField(null=False, blank=False)
+    annotation = models.TextField(blank=True)
     author = models.ForeignKey(
         Author, on_delete=models.CASCADE, null=True, related_name="books"
     )
+    image = models.ImageField(upload_to="book_images/", null=True)
 
     class Meta:
         verbose_name = "Книга"

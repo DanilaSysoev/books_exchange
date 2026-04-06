@@ -1,16 +1,13 @@
 from django.http import HttpRequest, HttpResponse
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
+
+from core.models import Book
 
 
 def index(request: HttpRequest) -> HttpResponse:
     context = {
-        "books": [
-            {"title": "Книга 1", "author": "Автор 1"},
-            {"title": "Книга 2", "author": "Автор 2"},
-            {"title": "Книга 3", "author": "Автор 3"},
-        ],
-        "error": None,
+        "books": Book.objects.order_by("-name").all(),
     }
 
     return render(request, "core/index.html", context)
@@ -22,3 +19,13 @@ def about(request: HttpRequest) -> HttpResponse:
     }
 
     return render(request, "core/about.html", context)
+
+
+def book_detail(request: HttpRequest, book_id: int) -> HttpResponse:
+    book = get_object_or_404(Book, id=book_id)
+
+    context = {
+        "book": book,
+    }
+
+    return render(request, "core/book_detail.html", context)
