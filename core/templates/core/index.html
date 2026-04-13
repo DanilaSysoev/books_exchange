@@ -25,6 +25,8 @@
                 </div>
             </div>
         {% endfor %}
+        </div>
+        <a href="{% url 'core:add_book' %}" class="btn btn-primary ms-4">Добавить книгу</a>
     {% endif %}
 </div>
 {% endblock %}
