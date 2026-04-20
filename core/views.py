@@ -1,8 +1,8 @@
 from django.http import HttpRequest, HttpResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
-from core.forms import AddBookForm
+from core.forms import AddBookForm, AuthorForm
 from core.models import Author, Book
 
 MAX_IMAGE_SIZE = 2 * 1024 * 1024  # 2 МБ
@@ -85,3 +85,47 @@ def book_detail(request: HttpRequest, book_id: int) -> HttpResponse:
     }
 
     return render(request, "core/book_detail.html", context)
+
+
+def authors(request: HttpRequest) -> HttpResponse:
+    context = {
+        "authors": Author.objects.order_by("name").all(),
+    }
+
+    return render(request, "core/authors.html", context)
+
+
+def author_detail(request: HttpRequest, author_id: int) -> HttpResponse:
+    author = get_object_or_404(Author, id=author_id)
+
+    context = {
+        "author": author,
+    }
+
+    return render(request, "core/author_detail.html", context)
+
+
+def add_author(request: HttpRequest) -> HttpResponse:
+    message = None
+    if request.method == "POST":
+        form = AuthorForm(request.POST)
+
+        if form.is_valid():
+            form.save()
+
+            return redirect(reverse("core:authors"))
+
+        else:
+            message = {
+                "text": "Пожалуйста, исправьте ошибки в форме",
+                "type": "error",
+            }
+    else:
+        form = AuthorForm()
+
+    context = {
+        "form": form,
+        "message": message,
+    }
+
+    return render(request, "core/add_author.html", context)

@@ -1,0 +1,31 @@
+{% extends "config/base.html" %}
+
+{% block title %}Author list{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="my-4 mx-md-4">Ниже представлен список всех авторов, книги которых доступны на сайте</h1>
+    {% if error %}
+        <div class="alert alert-danger" role="alert">
+            {{ error }}
+        </div>
+    {% else %}
+        <div class="row mt-4 mx-md-4">
+        {% for author in authors %}
+            <div class="col-md-4">
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <a href="{% url 'core:author_detail' author.id %}">
+                                {{ author.name }}
+                            </a>
+                        </h5>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+        </div>
+        <a href="{% url 'core:add_author' %}" class="btn btn-primary ms-4">Добавить автора</a>
+    {% endif %}
+</div>
+{% endblock %}
