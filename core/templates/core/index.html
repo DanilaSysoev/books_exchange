@@ -13,16 +13,7 @@
         <div class="row mt-4 mx-md-4">
         {% for book in books %}
             <div class="col-md-4">
-                <div class="card mb-4 shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title">
-                            <a href="{% url 'core:book_detail' book.id %}">
-                                {{ book.name }}
-                            </a>
-                        </h5>
-                        <p class="card-text">Автор: {{ book.author.name }}</p>
-                    </div>
-                </div>
+                {% include "core/includes/book_card.html" with book=book %}
             </div>
         {% endfor %}
         </div>

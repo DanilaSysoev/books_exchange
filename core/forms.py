@@ -1,5 +1,7 @@
 from django import forms
 
+from core.models import Author, Book
+
 
 class AddBookForm(forms.Form):
     name = forms.CharField(
@@ -29,3 +31,35 @@ class AddBookForm(forms.Form):
         label="Обложка",
         widget=forms.FileInput(attrs={"class": "form-control"}),
     )
+
+
+class BookForm(forms.ModelForm):
+    class Meta:
+        model = Book
+        fields = ["name", "publish_year", "annotation", "author", "image"]  # noqa: RUF012
+        widgets = {  # noqa: RUF012
+            "name": forms.TextInput(attrs={"class": "form-control"}),
+            "publish_year": forms.NumberInput(attrs={"class": "form-control"}),
+            "annotation": forms.Textarea(attrs={"class": "form-control"}),
+            "author": forms.TextInput(attrs={"class": "form-control"}),
+            "image": forms.FileInput(attrs={"class": "form-control"}),
+        }
+        labels = {  # noqa: RUF012
+            "name": "Название книги",
+            "publish_year": "Год публикации",
+            "annotation": "Аннотация",
+            "author": "Автор",
+            "image": "Обложка",
+        }
+
+
+class AuthorForm(forms.ModelForm):
+    class Meta:
+        model = Author
+        widgets = {  # noqa: RUF012
+            "name": forms.TextInput(attrs={"class": "form-control"}),
+        }
+        labels = {  # noqa: RUF012
+            "name": "Имя автора",
+        }
+        fields = ["name"]  # noqa: RUF012

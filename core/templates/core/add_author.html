@@ -1,0 +1,25 @@
+{% extends "config/base.html" %}
+
+{% block title %}Add author{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Введите данные об авторе</h1>
+    {% if message %}
+        {% if message.type == "success" %}
+        <div class="alert alert-success" role="alert">
+            {{ message.text }}
+        </div>
+        {% elif message.type == "error" %}
+        <div class="alert alert-danger" role="alert">
+            {{ message.text }}
+        </div>
+        {% endif %}
+    {% endif %}
+    <form method="post" enctype="multipart/form-data" action="{% url 'core:add_author' %}">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Добавить автора</button>
+    </form>
+</div>
+{% endblock %}
