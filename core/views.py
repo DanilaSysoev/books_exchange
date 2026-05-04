@@ -1,8 +1,9 @@
+from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
-from core.forms import AddBookForm, AuthorForm
+from core.forms import AddBookForm, AuthorForm, BookForm, MyUserCreationForm
 from core.models import Author, Book
 
 MAX_IMAGE_SIZE = 2 * 1024 * 1024  # 2 МБ
@@ -16,6 +17,7 @@ def index(request: HttpRequest) -> HttpResponse:
     return render(request, "core/index.html", context)
 
 
+@login_required
 def add_book(request: HttpRequest) -> HttpResponse:
     message = None
     if request.method == "POST":
@@ -41,6 +43,7 @@ def add_book(request: HttpRequest) -> HttpResponse:
                 annotation=form.cleaned_data["annotation"],
                 author=author,
                 image=img,
+                owner=request.user,  #  type: ignore
             )
 
             message = {
@@ -105,6 +108,7 @@ def author_detail(request: HttpRequest, author_id: int) -> HttpResponse:
     return render(request, "core/author_detail.html", context)
 
 
+@login_required
 def add_author(request: HttpRequest) -> HttpResponse:
     message = None
     if request.method == "POST":
@@ -129,3 +133,65 @@ def add_author(request: HttpRequest) -> HttpResponse:
     }
 
     return render(request, "core/add_author.html", context)
+
+
+def register(request: HttpRequest) -> HttpResponse:
+    if request.method == "POST":
+        form = MyUserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect(reverse("login"))
+        else:
+            error = "Пожалуйста, исправьте ошибки в форме"
+            return render(
+                request,
+                "registration/register.html",
+                {"form": form, "error": error},
+            )
+    else:
+        form = MyUserCreationForm()
+        return render(request, "registration/register.html", {"form": form})
+
+
+@login_required
+def edit_book(request: HttpRequest, book_id: int) -> HttpResponse:
+    book = get_object_or_404(Book, id=book_id)
+    if request.user != book.owner:
+        return HttpResponse(
+            "У вас нет прав на редактирование этой книги", status=403
+        )
+
+    if request.method == "POST":
+        form = BookForm(request.POST, request.FILES, instance=book)
+        if form.is_valid():
+            img = form.cleaned_data["image"]
+            if img and img.size > MAX_IMAGE_SIZE:
+                message = {
+                    "text": "Размер изображения не должен превышать 2 МБ",
+                    "type": "error",
+                }
+                return render(
+                    request,
+                    "core/edit_book.html",
+                    {"form": form, "book": book, "message": message},
+                )
+
+            form.save()
+            return redirect(reverse("core:book_detail", args=[book_id]))
+        else:
+            message = {
+                "text": "Пожалуйста, исправьте ошибки в форме",
+                "type": "error",
+            }
+            return render(
+                request,
+                "core/edit_book.html",
+                {"form": form, "book": book, "message": message},
+            )
+    else:
+        form = BookForm(instance=book)
+        return render(
+            request,
+            "core/edit_book.html",
+            {"form": form, "book": book},
+        )

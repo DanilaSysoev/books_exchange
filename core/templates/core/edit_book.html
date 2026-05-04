@@ -1,0 +1,16 @@
+{% extends "config/base.html" %}
+
+{% block title %}Edit {{ book.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="my-4 mx-md-4">Редактировать {{ book.name }}</h1>
+    <div class="mx-md-4">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
