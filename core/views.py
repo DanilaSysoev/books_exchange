@@ -1,10 +1,12 @@
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 
 from core.forms import AddBookForm, AuthorForm, BookForm, MyUserCreationForm
-from core.models import Author, Book
+from core.models import Author, Book, Exchange
 
 MAX_IMAGE_SIZE = 2 * 1024 * 1024  # 2 МБ
 
@@ -195,3 +197,29 @@ def edit_book(request: HttpRequest, book_id: int) -> HttpResponse:
             "core/edit_book.html",
             {"form": form, "book": book},
         )
+
+
+@login_required
+def exchange_book(request: HttpRequest, book_id: int) -> HttpResponse:
+    book = get_object_or_404(Book, id=book_id)
+
+    if not book.is_accessible_for_exchange:
+        return HttpResponse(
+            "Эта книга уже взята другим пользователем", status=400
+        )
+
+    if request.user == book.owner:
+        return HttpResponse(
+            "Вы не можете взять в обмен свою собственную книгу", status=400
+        )
+
+    if request.method == "POST":
+        Exchange.objects.create(
+            book=book,
+            to_user=request.user,  # type: ignore
+            return_date=timezone.now()
+            + timezone.timedelta(days=settings.EXCHANGE_DURATION_DAYS),  # type: ignore
+        )
+        return redirect(reverse("core:book_detail", args=[book_id]))
+
+    return HttpResponse("Метод не поддерживается", status=405)

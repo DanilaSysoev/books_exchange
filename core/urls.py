@@ -8,6 +8,7 @@ from core.views import (
     authors,
     book_detail,
     edit_book,
+    exchange_book,
     index,
     register,
 )
@@ -24,4 +25,5 @@ urlpatterns = [
     path("authors/", authors, name="authors"),
     path("author/<int:author_id>/", author_detail, name="author_detail"),
     path("book/<int:book_id>/edit/", edit_book, name="edit_book"),
+    path("book/<int:book_id>/exchange/", exchange_book, name="exchange_book"),
 ]
