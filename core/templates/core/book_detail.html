@@ -18,6 +18,15 @@
     <div class="mx-md-4 mt-3">
         {% if request.user == book.owner or request.user.is_superuser %}
             <a href="{% url 'core:edit_book' book.id %}" class="btn btn-primary">Редактировать</a>
+        {% elif book.is_accessible_for_exchange %}
+            <form action="{% url 'core:exchange_book' book.id %}" method="post" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success">Взять почитать</button>
+            </form>
+        {% elif book.current_holder == request.user %}
+            <p class="text-muted">Эта книга находится у вас. Верните ее до {{ book.return_date|date:"d.m.Y" }}.</p>
+        {% else %}
+            <p class="text-muted">Эта книга станет доступна {{ book.return_date|date:"d.m.Y" }}.</p>
         {% endif %}
     </div>
 </div>
