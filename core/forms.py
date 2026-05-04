@@ -1,4 +1,7 @@
+from typing import Any
+
 from django import forms
+from django.contrib.auth.forms import UserCreationForm
 
 from core.models import Author, Book
 
@@ -63,3 +66,10 @@ class AuthorForm(forms.ModelForm):
             "name": "Имя автора",
         }
         fields = ["name"]  # noqa: RUF012
+
+
+class MyUserCreationForm(UserCreationForm):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        for _, field in self.fields.items():
+            field.widget.attrs["class"] = "form-control"

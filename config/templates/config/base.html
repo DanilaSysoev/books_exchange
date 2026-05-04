@@ -13,6 +13,23 @@
             {% include "config/includes/header.html" %}
         </header>
         <main>
+            <div class="container">
+                {% if request.user.is_authenticated %}
+                    <div class="row my-2">
+                        <div class="mx-2 col-2">Вы вошли как {{ request.user.username }}</div>
+                        <form class="col-1" method="post" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-link" formaction="{% url 'logout' %}">Выйти</button>
+                        </form>
+                    </div>
+                {% else %}
+                    <div class="row my-2">
+                        <a href="{% url 'login' %}" class="btn btn-link col-1">Войти</a>
+                        <a href="{% url 'core:register' %}" class="btn btn-link col-1">Регистрация</a>
+                    </div>
+                {% endif %}
+                <hr/>
+            </div>
             {% block content %}{% endblock %}
         </main>
         <footer class="mt-auto">

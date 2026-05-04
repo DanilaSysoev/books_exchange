@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.db import models
 
 
@@ -20,7 +21,11 @@ class Book(models.Model):
     author = models.ForeignKey(
         Author, on_delete=models.CASCADE, null=True, related_name="books"
     )
-    image = models.ImageField(upload_to="book_images/", null=True)
+    image = models.ImageField(upload_to="book_images/", null=True, blank=True)
+
+    owner = models.ForeignKey(
+        User, on_delete=models.CASCADE, null=False, related_name="books"
+    )
 
     class Meta:
         verbose_name = "Книга"

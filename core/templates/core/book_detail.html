@@ -15,5 +15,10 @@
             <p><strong>Аннотация:</strong> {{ book.annotation }}</p>
         {% endif %}
     </div>
+    <div class="mx-md-4 mt-3">
+        {% if request.user == book.owner or request.user.is_superuser %}
+            <a href="{% url 'core:edit_book' book.id %}" class="btn btn-primary">Редактировать</a>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}
