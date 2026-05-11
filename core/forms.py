@@ -3,7 +3,7 @@ from typing import Any
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 
-from core.models import Author, Book
+from core.models import Author, Book, Comment
 
 
 class AddBookForm(forms.Form):
@@ -73,3 +73,12 @@ class MyUserCreationForm(UserCreationForm):
         super().__init__(*args, **kwargs)
         for _, field in self.fields.items():
             field.widget.attrs["class"] = "form-control"
+
+
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ["text"]  # noqa: RUF012
+        widgets = {  # noqa: RUF012
+            "text": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+        }

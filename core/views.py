@@ -1,12 +1,19 @@
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 
-from core.forms import AddBookForm, AuthorForm, BookForm, MyUserCreationForm
-from core.models import Author, Book, Exchange
+from core.forms import (
+    AddBookForm,
+    AuthorForm,
+    BookForm,
+    CommentForm,
+    MyUserCreationForm,
+)
+from core.models import Author, Book, Comment, Exchange
 
 MAX_IMAGE_SIZE = 2 * 1024 * 1024  # 2 МБ
 
@@ -87,9 +94,31 @@ def book_detail(request: HttpRequest, book_id: int) -> HttpResponse:
 
     context = {
         "book": book,
+        "form": CommentForm(),
     }
 
     return render(request, "core/book_detail.html", context)
+
+
+@login_required
+def add_comment(request: HttpRequest, book_id: int) -> HttpResponse:
+    book = get_object_or_404(Book, id=book_id)
+
+    if request.method == "POST":
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            Comment.objects.create(
+                book=book,
+                author=request.user,  # type: ignore
+                text=form.cleaned_data["text"],
+            )
+            messages.success(request, "Комментарий успешно добавлен")
+            return redirect(reverse("core:book_detail", args=[book_id]))
+        else:
+            messages.error(request, "Пожалуйста, исправьте ошибки в форме")
+            return redirect(reverse("core:book_detail", args=[book_id]))
+    else:
+        return HttpResponse("Метод не поддерживается", status=405)
 
 
 def authors(request: HttpRequest) -> HttpResponse:

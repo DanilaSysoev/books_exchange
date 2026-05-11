@@ -4,6 +4,7 @@ from core.views import (
     about,
     add_author,
     add_book,
+    add_comment,
     author_detail,
     authors,
     book_detail,
@@ -26,4 +27,5 @@ urlpatterns = [
     path("author/<int:author_id>/", author_detail, name="author_detail"),
     path("book/<int:book_id>/edit/", edit_book, name="edit_book"),
     path("book/<int:book_id>/exchange/", exchange_book, name="exchange_book"),
+    path("book/<int:book_id>/add-comment/", add_comment, name="add_comment"),
 ]
