@@ -1,13 +1,16 @@
+from typing import Any
+
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import HttpRequest, HttpResponse
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
 from core.forms import (
-    AddBookForm,
     AuthorForm,
     BookForm,
     CommentForm,
@@ -18,67 +21,32 @@ from core.models import Author, Book, Comment, Exchange
 MAX_IMAGE_SIZE = 2 * 1024 * 1024  # 2 МБ
 
 
-def index(request: HttpRequest) -> HttpResponse:
-    context = {
-        "books": Book.objects.order_by("-name").all(),
-    }
+class BookListView(ListView):
+    model = Book
+    template_name = "core/index.html"
+    context_object_name = "books"
+    ordering = ("-name",)
 
-    return render(request, "core/index.html", context)
 
+class AddBookView(LoginRequiredMixin, CreateView):
+    model = Book
+    form_class = BookForm
+    template_name = "core/add_book.html"
 
-@login_required
-def add_book(request: HttpRequest) -> HttpResponse:
-    message = None
-    if request.method == "POST":
-        form = AddBookForm(request.POST, request.FILES)
-
-        if form.is_valid():
-            author = Author.objects.create(name=form.cleaned_data["author"])
-            img = form.cleaned_data["image"]
-            if img and img.size > MAX_IMAGE_SIZE:
-                message = {
-                    "text": "Размер изображения не должен превышать 2 МБ",
-                    "type": "error",
-                }
-                return render(
-                    request,
-                    "core/add_book.html",
-                    {"message": message, "form": form},
-                )
-
-            Book.objects.create(
-                name=form.cleaned_data["name"],
-                publish_year=form.cleaned_data["publish_year"],
-                annotation=form.cleaned_data["annotation"],
-                author=author,
-                image=img,
-                owner=request.user,  #  type: ignore
+    def form_valid(self, form: BookForm) -> HttpResponse:
+        img = form.cleaned_data["image"]
+        if img and img.size > MAX_IMAGE_SIZE:
+            form.add_error(
+                "image", "Размер изображения не должен превышать 2 МБ"
             )
-
-            message = {
-                "text": "Книга успешно добавлена",
-                "type": "success",
-            }
-
-            return render(
-                request,
-                "core/add_book.html",
-                {"message": message, "form": AddBookForm()},
-            )
-        else:
-            message = {
-                "text": "Пожалуйста, исправьте ошибки в форме",
-                "type": "error",
-            }
-    else:
-        form = AddBookForm()
-
-    context = {
-        "form": form,
-        "message": message,
-    }
-
-    return render(request, "core/add_book.html", context)
+            return self.form_invalid(form)
+        author = Author.objects.create(name=form.cleaned_data["author"])
+        form.instance.author = author
+        form.instance.owner = self.request.user
+        form.instance.image = img
+        self.object = form.save()
+        messages.success(self.request, "Книга успешно добавлена")
+        return HttpResponseRedirect(self.get_success_url())
 
 
 def about(request: HttpRequest) -> HttpResponse:
@@ -89,15 +57,16 @@ def about(request: HttpRequest) -> HttpResponse:
     return render(request, "core/about.html", context)
 
 
-def book_detail(request: HttpRequest, book_id: int) -> HttpResponse:
-    book = get_object_or_404(Book, id=book_id)
+class BookDetailView(DetailView):
+    model = Book
+    template_name = "core/book_detail.html"
+    context_object_name = "book"
+    pk_url_kwarg = "book_id"
 
-    context = {
-        "book": book,
-        "form": CommentForm(),
-    }
-
-    return render(request, "core/book_detail.html", context)
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        context["form"] = CommentForm()
+        return context
 
 
 @login_required
@@ -184,47 +153,16 @@ def register(request: HttpRequest) -> HttpResponse:
         return render(request, "registration/register.html", {"form": form})
 
 
-@login_required
-def edit_book(request: HttpRequest, book_id: int) -> HttpResponse:
-    book = get_object_or_404(Book, id=book_id)
-    if request.user != book.owner:
-        return HttpResponse(
-            "У вас нет прав на редактирование этой книги", status=403
-        )
+class EditBookView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Book
+    form_class = BookForm
+    template_name = "core/edit_book.html"
+    pk_url_kwarg = "book_id"
 
-    if request.method == "POST":
-        form = BookForm(request.POST, request.FILES, instance=book)
-        if form.is_valid():
-            img = form.cleaned_data["image"]
-            if img and img.size > MAX_IMAGE_SIZE:
-                message = {
-                    "text": "Размер изображения не должен превышать 2 МБ",
-                    "type": "error",
-                }
-                return render(
-                    request,
-                    "core/edit_book.html",
-                    {"form": form, "book": book, "message": message},
-                )
-
-            form.save()
-            return redirect(reverse("core:book_detail", args=[book_id]))
-        else:
-            message = {
-                "text": "Пожалуйста, исправьте ошибки в форме",
-                "type": "error",
-            }
-            return render(
-                request,
-                "core/edit_book.html",
-                {"form": form, "book": book, "message": message},
-            )
-    else:
-        form = BookForm(instance=book)
-        return render(
-            request,
-            "core/edit_book.html",
-            {"form": form, "book": book},
+    def test_func(self) -> bool:
+        book = self.get_object()
+        return (
+            self.request.user == book.owner or self.request.user.is_superuser
         )
 
 
