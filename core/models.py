@@ -74,6 +74,11 @@ class Book(models.Model):
         verbose_name_plural = "Книги"
         ordering = ("name",)
 
+    def get_absolute_url(self) -> str:
+        from django.urls import reverse
+
+        return reverse("core:book_detail", kwargs={"book_id": self.pk})
+
     def __str__(self) -> str:
         return f'{self.author}: "{self.name}"'
 
